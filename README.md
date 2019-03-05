@@ -10,16 +10,21 @@ Luckily the shell2http was built on the same OS so to integrate these two things
 
 ### Usage example
 
-This launches the container that crops the image and responds with RGB pixels printed as TSV for further processing:
+This container runs arbitrary chain of shell commands to process posted images that shell2http implicitly puts somewhere in `/tmp` folder:
 
 ```bash
-docker run --rm --name=vips -p 8080:8080 nakilonishe/vips-shell2http -show-errors -form / "vips crop \$filepath_file temp.v \$v_left \$v_top \$v_width \$v_height && vips bandunfold temp.v temp_.v --factor \$v_factor && vips csvsave temp_.v temp.csv && cat temp.csv"
+docker run --rm --read-only --tmpfs /tmp -p 8080:8080 vips-shell2http -show-errors -form / "eval \$v_command"
 ```
 
-This is how I call it with cURL from host machine:
+This curl asks it to crop the image and respond with RGB pixels printed as TSV for further processing:
 
 ```bash
-curl -s -X POST -F file=@/home/ubuntu/temp.png -F factor=4 -F left=10 -F top=3 -F width=3 -F height=5 http://localhost:8080/
+curl -s -X POST -F file=@/home/ubuntu/Downloads/house.png \
+                -F factor=3 -F left=10 -F top=3 -F width=6 -F height=15 \
+                -F command="vips crop \$filepath_file /tmp/temp.v \$v_left \$v_top \$v_width \$v_height &&
+                            vips bandunfold /tmp/temp.v /tmp/temp_.v --factor \$v_factor &&
+                            vips csvsave /tmp/temp_.v /tmp/temp.csv &&
+                            cat /tmp/temp.csv" http://localhost:8080/
 ```
 
-For usage from a container use port bindings and container hostnames.
+To call it from another container specify the container hostname with `docker run --name ...` or using docker-compose.
