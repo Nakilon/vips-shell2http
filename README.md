@@ -37,3 +37,5 @@ curl -s -X POST -F file=@/home/ubuntu/Downloads/house.png \
 ```
 
 To call it from another container specify the container hostname with `docker run --name ...` or using docker-compose.
+
+**Caution:** if you run the container like in this example (evaling an arbitrary command) you provide the shell access that in case of port being opened to Internet (through `docker run -p` and host firewall) is kind of vulnerability. Be sure you don't give this container an access to valuable source code, images and that it is launched only in docker networks with containers that don't have ports opened.
