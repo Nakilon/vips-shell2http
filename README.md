@@ -10,21 +10,30 @@ Luckily the shell2http was built on the same OS so to integrate these two things
 
 ### Usage example
 
-This container runs arbitrary chain of shell commands to process posted images that shell2http implicitly puts somewhere in `/tmp` folder:
+This container runs arbitrary chain of shell commands to process posted image that shell2http implicitly puts somewhere in `/tmp` folder:
 
 ```bash
 docker run --rm --read-only --tmpfs /tmp -p 8080:8080 vips-shell2http -show-errors -form / "eval \$v_command"
 ```
 
-This curl asks it to crop the image and respond with RGB pixels printed as TSV for further processing:
+This curl posts an image and asks it to crop and respond with RGB pixels printed as TSV for further processing:
 
 ```bash
 curl -s -X POST -F file=@/home/ubuntu/Downloads/house.png \
-                -F factor=3 -F left=10 -F top=3 -F width=6 -F height=15 \
+                -F factor=3 -F left=10 -F top=30 -F width=4 -F height=6 \
                 -F command="vips crop \$filepath_file /tmp/temp.v \$v_left \$v_top \$v_width \$v_height &&
                             vips bandunfold /tmp/temp.v /tmp/temp_.v --factor \$v_factor &&
                             vips csvsave /tmp/temp_.v /tmp/temp.csv &&
                             cat /tmp/temp.csv" http://localhost:8080/
+
+```
+```
+39  26  21  34  21  17  29  19  18  27  18  18
+40  26  22  34  22  18  30  19  18  27  18  17
+35  22  18  34  21  17  33  22  21  30  21  20
+34  21  16  33  21  16  33  23  22  32  23  22
+33  20  16  33  20  16  34  24  23  35  26  24
+33  20  16  33  20  16  35  25  23  35  26  25
 ```
 
 To call it from another container specify the container hostname with `docker run --name ...` or using docker-compose.
